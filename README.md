@@ -2,23 +2,13 @@
 
 This repository includes all the Bicep (infrastructure-as-code) necessary to provision an Azure App Service app with the [built-in authentication feature](https://learn.microsoft.com/azure/app-service/overview-authentication-authorization) and a Microsoft Entra ID identity provider. The Bicep files use the new [Microsoft Graph extension (public preview)](https://learn.microsoft.com/graph/templates/overview-bicep-templates-for-graph) to create the Entra application registration using [managed identity with Federated Identity Credentials](https://docs.microsoft.com/azure/app-service/overview-managed-identity), so that no client secrets or certificates are necessary.
 
-* [Costs](#costs)
 * [Getting started](#getting-started)
   * [GitHub Codespaces](#github-codespaces)
   * [VS Code Dev Containers](#vs-code-dev-containers)
   * [Local environment](#local-environment)
 * [Deploying](#deploying)
+* [Costs](#costs)
 * [Local development](#local-development)
-
-## Costs
-
-Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage. You can try the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator/) for the resources:
-
-* Azure App Service: Basic Tier with 1 CPU core, 1.75 GB RAM. [Pricing](https://azure.microsoft.com/pricing/details/app-service/linux/)
-* Microsoft Entra: Free for up to 50,000 monthly active users. [Pricing](https://www.microsoft.com/security/business/microsoft-entra-pricing)
-
-⚠️ To reduce unnecessary costs, remember to take down your app if it's no longer in use,
-either by deleting the resource group in the Portal or running `azd down`.
 
 ## Getting started
 
@@ -96,6 +86,16 @@ Steps for deployment:
     It will prompt you to login and to provide a name (like "authapp") and location (like "eastus"). Then it will provision the resources in your account and deploy the latest code.
 
 5. When `azd` has finished deploying, you'll see an endpoint URI in the command output. Visit that URI, and you should see the front page of the app! 🎉 If you see an error, open the Azure Portal from the URL in the command output, navigate to the App Service, select Logstream, and check the logs for any errors.
+
+## Costs
+
+Pricing varies per region and usage, so it isn't possible to predict exact costs for your usage. You can try the [Azure pricing calculator](https://azure.microsoft.com/pricing/calculator/) for the resources:
+
+* Azure App Service: Basic Tier with 1 CPU core, 1.75 GB RAM. [Pricing](https://azure.microsoft.com/pricing/details/app-service/linux/)
+* Microsoft Entra: Free for up to 50,000 monthly active users. [Pricing](https://www.microsoft.com/security/business/microsoft-entra-pricing)
+
+⚠️ To reduce unnecessary costs, remember to take down your app if it's no longer in use,
+either by deleting the resource group in the Portal or running `azd down`.
 
 ## Local development
 
