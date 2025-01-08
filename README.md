@@ -111,7 +111,7 @@ The built-in auth feature is only available when the app is deployed to Azure Ap
 
 3. Run the server:
 
-    ```console
+    ```shell
     python3 -m flask run --port 50505 --debug
     ```
 
