@@ -45,6 +45,7 @@ If you're not using one of the above options for opening the project, then you'l
 1. Make sure the following tools are installed:
 
     * [Azure Developer CLI (azd)](https://aka.ms/install-azd)
+    * [Bicep v0.30.3+](https://learn.microsoft.com/en-us/azure/azure-resource-manager/bicep/install#azure-cli)
     * [Python 3.9+](https://www.python.org/downloads/): Only needed for local development.
     * [Git](https://git-scm.com/downloads)
 
