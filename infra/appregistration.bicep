@@ -1,4 +1,27 @@
-provider microsoftGraph
+extension microsoftGraphV1
+
+@description('Specifies the name of cloud environment to run this deployment in.')
+param cloudEnvironment string = environment().name
+
+// NOTE: Microsoft Graph Bicep file deployment is only supported in Public Cloud
+@description('Audience uris for public and national clouds')
+param audiences object = {
+  AzureCloud: {
+    uri: 'api://AzureADTokenExchange'
+  }
+  AzureUSGovernment: {
+    uri: 'api://AzureADTokenExchangeUSGov'
+  }
+  USNat: {
+    uri: 'api://AzureADTokenExchangeUSNat'
+  }
+  USSec: {
+    uri: 'api://AzureADTokenExchangeUSSec'
+  }
+  AzureChinaCloud: {
+    uri: 'api://AzureADTokenExchangeChina'
+  }
+}
 
 @description('Specifies the ID of the user-assigned managed identity.')
 param webAppIdentityId string
@@ -9,50 +32,56 @@ param clientAppName string
 @description('Specifies the display name for the client application')
 param clientAppDisplayName string
 
+@description('Specifies the scopes that the client application requires.')
+param clientAppScopes array = ['User.Read', 'offline_access', 'openid', 'profile']
+
 param serviceManagementReference string = ''
 
 param issuer string
 
 param webAppEndpoint string
 
+// Get the MS Graph Service Principal based on its application ID:
+// https://learn.microsoft.com/troubleshoot/entra/entra-id/governance/verify-first-party-apps-sign-in
+var msGraphAppId = '00000003-0000-0000-c000-000000000000'
+resource msGraphSP 'Microsoft.Graph/servicePrincipals@v1.0' existing = {
+  appId: msGraphAppId
+}
 
+var graphScopes = msGraphSP.oauth2PermissionScopes
 resource clientApp 'Microsoft.Graph/applications@v1.0' = {
   uniqueName: clientAppName
   displayName: clientAppDisplayName
   signInAudience: 'AzureADMyOrg'
   serviceManagementReference: empty(serviceManagementReference) ? null : serviceManagementReference
   web: {
-      redirectUris: [
-        'http://localhost:50505/.auth/login/aad/callback'
-        '${webAppEndpoint}/.auth/login/aad/callback'
-      ]
-      implicitGrantSettings: {enableIdTokenIssuance: true}
+    redirectUris: [
+      'http://localhost:50505/.auth/login/aad/callback'
+      '${webAppEndpoint}/.auth/login/aad/callback'
+    ]
+    implicitGrantSettings: { enableIdTokenIssuance: true }
   }
   requiredResourceAccess: [
     {
-      resourceAppId: '00000003-0000-0000-c000-000000000000'
+      resourceAppId: msGraphAppId
       resourceAccess: [
-        // Graph User.Read
-        {id: 'e1fe6dd8-ba31-4d61-89e7-88639da4683d', type: 'Scope'}
-        // offline_access
-        {id: '7427e0e9-2fba-42fe-b0c0-848c9e6a8182', type: 'Scope'}
-        // openid
-        {id: '37f7f235-527c-4136-accd-4a02d197296e', type: 'Scope'}
-        // profile
-        {id: '14dad69e-099b-42c9-810b-d002981feec1', type: 'Scope'}
+        for (scope, i) in clientAppScopes: {
+          id: filter(graphScopes, graphScopes => graphScopes.value == scope)[0].id
+          type: 'Scope'
+        }
       ]
     }
   ]
 
   resource clientAppFic 'federatedIdentityCredentials@v1.0' = {
     name: '${clientApp.uniqueName}/miAsFic'
-    audiences: ['api://AzureADTokenExchange']
+    audiences: [
+      audiences[cloudEnvironment].uri
+   ]
     issuer: issuer
     subject: webAppIdentityId
   }
 }
-
-
 
 resource clientSp 'Microsoft.Graph/servicePrincipals@v1.0' = {
   appId: clientApp.appId

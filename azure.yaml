@@ -1,7 +1,10 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
 
-name: simple-flask-server-xample
-
+name: appservice-builtinauth-bicep
+metadata:
+  template: appservice-builtinauth-bicep0.1.0
+requiredVersions:
+    azd: ">= 1.12.0"
 services:
   web:
     project: .
