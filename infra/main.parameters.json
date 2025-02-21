@@ -16,6 +16,9 @@
       },
       "serviceManagementReference": {
         "value": "${AZURE_SERVICE_MANAGEMENT_REFERENCE}"
+      },
+      "acaExists": {
+        "value": "${SERVICE_ACA_RESOURCE_EXISTS=false}"
       }
     }
   }
