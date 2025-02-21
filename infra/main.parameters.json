@@ -11,14 +11,14 @@
       "principalId": {
         "value": "${AZURE_PRINCIPAL_ID}"
       },
-      "useFreeSku": {
-        "value": "${USE_FREE_SKU=false}"
-      },
       "serviceManagementReference": {
         "value": "${AZURE_SERVICE_MANAGEMENT_REFERENCE}"
       },
       "acaExists": {
         "value": "${SERVICE_ACA_RESOURCE_EXISTS=false}"
+      },
+      "includeTokenStore": {
+        "value": "${USE_ACA_TOKEN_STORE=false}"
       }
     }
   }

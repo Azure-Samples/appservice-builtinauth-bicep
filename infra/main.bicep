@@ -11,6 +11,10 @@ param location string
 
 param acaExists bool = false
 
+// A token store is only needed if the app needs to access the Entra access tokens
+// https://learn.microsoft.com/azure/container-apps/token-store
+param includeTokenStore bool = true
+
 param tokenStorageContainerName string = 'tokens'
 
 @description('Service Management Reference for the app registration')
@@ -27,35 +31,6 @@ resource resourceGroup 'Microsoft.Resources/resourceGroups@2021-04-01' = {
 
 var prefix = '${name}-${resourceToken}'
 
-module storage 'br/public:avm/res/storage/storage-account:0.9.1' = {
-  name: 'storage'
-  scope: resourceGroup
-  params: {
-    name: '${take(replace(prefix, '-', ''), 17)}storage'
-    location: location
-    tags: tags
-
-    kind: 'StorageV2'
-    skuName: 'Standard_LRS'
-    publicNetworkAccess: 'Enabled'
-    networkAcls: {
-      bypass: 'AzureServices'
-      defaultAction: 'Allow'
-    }
-    allowBlobPublicAccess: false
-    allowSharedKeyAccess: false
-    blobServices: {
-      deleteRetentionPolicyDays: 2
-      deleteRetentionPolicyEnabled: true
-      containers: [
-        {
-          name: tokenStorageContainerName
-          publicAccess: 'None'
-        }
-      ]
-    }
-  }
-}
 
 // Container apps environment (including container registry)
 module containerApps 'core/host/container-apps.bicep' = {
@@ -110,6 +85,37 @@ module registration 'appregistration.bicep' = {
   }
 }
 
+
+module storage 'br/public:avm/res/storage/storage-account:0.9.1' = if (includeTokenStore) {
+  name: 'storage'
+  scope: resourceGroup
+  params: {
+    name: '${take(replace(prefix, '-', ''), 17)}storage'
+    location: location
+    tags: tags
+
+    kind: 'StorageV2'
+    skuName: 'Standard_LRS'
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      bypass: 'AzureServices'
+      defaultAction: 'Allow'
+    }
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: false
+    blobServices: {
+      deleteRetentionPolicyDays: 2
+      deleteRetentionPolicyEnabled: true
+      containers: [
+        {
+          name: tokenStorageContainerName
+          publicAccess: 'None'
+        }
+      ]
+    }
+  }
+}
+
 module appupdate 'appupdate.bicep' = {
   name: 'appupdate'
   scope: resourceGroup
@@ -117,8 +123,9 @@ module appupdate 'appupdate.bicep' = {
     containerAppName: aca.outputs.name
     clientId: registration.outputs.clientAppId
     openIdIssuer: issuer
-    blobContainerUri: 'https://${storage.outputs.name}.blob.${environment().suffixes.storage}/${tokenStorageContainerName}'
-    appIdentityResourceId: aca.outputs.identityResourceId
+    includeTokenStore: includeTokenStore
+    blobContainerUri: includeTokenStore ? 'https://${storage.outputs.name}.blob.${environment().suffixes.storage}/${tokenStorageContainerName}' : ''
+    appIdentityResourceId: includeTokenStore ? aca.outputs.identityResourceId : ''
   }
 }
 
